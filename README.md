@@ -3,16 +3,17 @@
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Quality Gates](https://github.com/NkAntony777/openpaper-cli/actions/workflows/quality.yml/badge.svg)](https://github.com/NkAntony777/openpaper-cli/actions/workflows/quality.yml)
-[![Built on OpenDraft](https://img.shields.io/badge/Built%20on-OpenDraft-orange)](https://github.com/federicodeponte/opendraft)
 
 > **Paper writing workflows for any harness.** Keep your coding agent and your
 > subscription — Claude Code, ZCode, Cursor, Codex, anything with a shell. OpenPaper
-> contributes the workflow: guardrailed writing tools, quality gates, a claims
-> ledger, and a finish gate that reads disk truth. The model is your model.
+> contributes the workflow: guardrailed writing tools, a blind review panel,
+> quality gates, a claims ledger, and a finish gate that reads disk truth.
+> The model is your model.
 
-This is the CLI-native sibling of [OpenPaper](https://github.com/NkAntony777/openpaper)
-(which ships its own pi-based driver for unattended runs). Same tool layer, same
-guardrails — different deployment model: **your harness drives, OpenPaper answers.**
+Unattended runs with the built-in pi driver live in the sibling repo
+[OpenPaper](https://github.com/NkAntony777/openpaper) — same tool layer, same
+guardrails, different deployment model. This repo: **your harness drives,
+OpenPaper answers.**
 
 ---
 
@@ -116,26 +117,15 @@ CONTRADICTED claims, zero forbidden-claim hits, and a full-draft score ≥ 75.
 ## Testing
 
 ```bash
-pytest tests/ -q        # 580+ offline tests; no network, no LLM calls
+pytest tests/ -q        # 590+ offline tests; no network, no LLM calls
 ```
 
 CI runs the same suite plus `ruff` lint/format gates on every push.
 
-## Relationship map
-
-| | OpenPaper (sibling repo) | **OpenPaper CLI** (this repo) |
-|---|---|---|
-| Who runs the agent | its own pi driver (RPC mode) | **your harness** |
-| Model access | API keys (MiniMax/…) | your subscription |
-| Budget control | built-in cost/turns/wall-clock breaker | you / your harness |
-| TS extension, run journal, distill | ✔ | ✘ (not applicable) |
-| Tool layer, gates, claims ledger, finish gate | ✔ | ✔ (same code) |
-
-Design background (the audit that motivated all of this):
-[docs/AGENT_HARNESS_DESIGN.md](docs/AGENT_HARNESS_DESIGN.md).
+Design background: [docs/AGENT_HARNESS_DESIGN.md](docs/AGENT_HARNESS_DESIGN.md).
 
 ## Credits & license
 
-Built on [OpenDraft](https://github.com/federicodeponte/opendraft) by Federico De
-Ponte (MIT), continuing the work in
-[OpenPaper](https://github.com/NkAntony777/openpaper). MIT License.
+Continues the work of [OpenDraft](https://github.com/federicodeponte/opendraft)
+(Federico De Ponte, MIT) and [OpenPaper](https://github.com/NkAntony777/openpaper).
+MIT License.
