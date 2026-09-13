@@ -173,7 +173,12 @@ def build_fix_prompt(root, section: str, issues: List[Dict]) -> str:
         "guardrails (word floor, no placeholders). Fix regressions before finishing. If a "
         "finding is a factual error, resolve the matching claims-ledger entry "
         "(manage_claims action=resolve).",
-        "4. Finish with a plain-text report: for each finding, FIXED or NOT FIXED with a "
+        "4. Update the fix traceability matrix `fix_report.md` (create or append; plain "
+        "file write): one line per finding, `| GI-N | FIXED or NOT FIXED | section | "
+        "one-line evidence pointer |`. Every finding received by this section must have "
+        "a row before you finish — [da-critical] findings additionally need `ADJUDICATED` "
+        "(with rationale) instead of a silent NOT FIXED.",
+        "5. Finish with a plain-text report: for each finding, FIXED or NOT FIXED with a "
         "one-line reason, plus the final score_draft passed state.",
     ]
     return "\n".join(lines) + "\n"

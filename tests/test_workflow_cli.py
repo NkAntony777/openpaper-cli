@@ -21,18 +21,6 @@ from harness.workflow import (
     workflow_next,
 )
 
-POC = Path(__file__).parent / "fixtures" / "poc_output"
-
-
-@pytest.fixture
-def poc_root(tmp_path):
-    """Copy the PoC fixture (bibliography + outline + checkpoint) into a tmp dir."""
-    import shutil
-
-    dest = tmp_path / "paper"
-    shutil.copytree(POC, dest)
-    return dest
-
 
 def _pass_all_sections(root, sections):
     for s in sections:
@@ -94,7 +82,9 @@ def test_next_review_after_all_sections(poc_root):
     _pass_all_sections(poc_root, plan_sections(poc_root))
     out = workflow_next(poc_root)
     assert out["phase"] == "review"
-    assert "global_issues.md" in out["prompt"]
+    # review is staged: blind panel first (global_issues.md comes at synthesis)
+    assert out["stage"] == "panel"
+    assert "subagent" in out["prompt"].lower()
 
 
 # ------------------------------------------------------------------------ fixes

@@ -26,7 +26,12 @@ from agent_tools.common import (  # noqa: E402
 )
 from harness.acceptance import run_finish_acceptance  # noqa: E402
 from harness.paper_map import seed_approved_lessons, write_paper_map  # noqa: E402
-from harness.review_task import build_review_prompt  # noqa: E402
+from harness.review_panel import (  # noqa: E402
+    SEAT_ORDER,
+    build_panel_dispatch_prompt,
+    build_synthesis_prompt,
+    seats_reported,
+)
 from harness.section_task import build_fix_prompt, build_section_prompt  # noqa: E402
 
 DEFAULT_PAPER_SECTIONS = [
@@ -39,6 +44,7 @@ DEFAULT_PAPER_SECTIONS = [
 ]
 
 GLOBAL_ISSUES_NAME = "global_issues.md"
+FIX_REPORT_REL = "fix_report.md"
 
 DEFAULT_MIN_FULL_SCORE = 75
 DEFAULT_MAX_FIX_ROUNDS = 1
@@ -299,17 +305,26 @@ def workflow_next(root, max_fix_rounds: int = DEFAULT_MAX_FIX_ROUNDS) -> Dict:
                         "to receive the next one."
                     ),
                 }
+        # Review = blind panel: dispatch seats until all report, then synthesize.
+        reported = seats_reported(root)
+        if len(reported) < len(SEAT_ORDER):
+            return {
+                "phase": "review",
+                "stage": "panel",
+                "seats_reported": reported,
+                "seats_missing": [s for s in SEAT_ORDER if s not in reported],
+                "prompt": cli_prompt(build_panel_dispatch_prompt(root)),
+                "hint": (
+                    "spawn each missing seat as an independent subagent (fresh "
+                    "context); when all reports are on disk, call next for synthesis"
+                ),
+            }
         return {
             "phase": "review",
-            "prompt": cli_prompt(build_review_prompt(root))
-            + (
-                "\nDeliverable: write your final issue list to `global_issues.md` in "
-                "this directory (plain file write), using exactly the `## GI-N "
-                "[severity] scope: <section>` heading format from the instructions. "
-                "If everything is consistent, write the no-issues text instead. "
-                "Then call `opendraft workflow next --root .`."
-            ),
-            "hint": "The review's findings drive the fix phase; the file must exist either way.",
+            "stage": "synthesize",
+            "seats_reported": reported,
+            "prompt": cli_prompt(build_synthesis_prompt(root)),
+            "hint": "merge the panel reports into global_issues.md; then call next",
         }
 
     # Post-review world: targeted fixes first (round-limited per section; a passing
@@ -359,6 +374,29 @@ def workflow_next(root, max_fix_rounds: int = DEFAULT_MAX_FIX_ROUNDS) -> Dict:
     return _finish_task(root, notes)
 
 
+def _fix_report_digest(root: Path) -> Optional[Dict]:
+    """Summarize fix_report.md (the fix traceability matrix) when it exists:
+    counts per verdict, plus any GI ids with no row — rubber-stamp detection."""
+    p = root / FIX_REPORT_REL
+    if not p.exists():
+        return None
+    import re
+
+    rows = {"FIXED": 0, "NOT FIXED": 0, "ADJUDICATED": 0}
+    ids_seen = set()
+    for line in p.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"\|\s*(GI-\d+)\s*\|\s*([^|]+)\|", line)
+        if not m:
+            continue
+        ids_seen.add(m.group(1))
+        verdict = m.group(2).strip().upper()
+        for key in ("NOT FIXED", "ADJUDICATED", "FIXED"):
+            if verdict.startswith(key):
+                rows[key] += 1
+                break
+    return {"verdicts": rows, "issues_traced": len(ids_seen)}
+
+
 def _finish_task(root: Path, notes: Optional[List[str]] = None) -> Dict:
     """Run the full score + finish acceptance and shape it as the next task."""
     from agent_tools.score import run as score_run
@@ -376,6 +414,7 @@ def _finish_task(root: Path, notes: Optional[List[str]] = None) -> Dict:
         "claims_clean": gate.claims_clean,
         "citation_rate": gate.citation_rate,
         "forbidden_hits": len(gate.forbidden_hits),
+        "fix_report": _fix_report_digest(root),
     }
     if gate.passed:
         base["phase"] = "done"

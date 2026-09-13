@@ -24,7 +24,9 @@ or set OPENDRAFT_BIN). Verify once with `opendraft tool list`.
 3. `opendraft workflow next --root .` — it returns ONE task prompt plus phase info.
 4. Execute that task exactly as prompted (it tells you which `opendraft tool ...`
    shell commands to use), then call `next` again.
-5. Repeat until `next` reports `"phase": "done"` (finish gate passed). Exit code 1
+5. The review phase dispatches a BLIND PANEL: spawn each seat as an independent
+   subagent with a fresh context (the prompt includes the seat cards verbatim).
+6. Repeat until `next` reports `"phase": "done"` (finish gate passed). Exit code 1
    from `next` means the gate is failing — read the `gaps` it returns and remediate.
 
 ## Hard rules

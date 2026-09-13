@@ -34,8 +34,17 @@ guardrails — different deployment model: **your harness drives, OpenPaper answ
 
 - **The workflow is code + disk, not prompts.** `workflow next` reads
   `section_status.json`, the claims ledger, and `global_issues.md` to decide the
-  next task (write a section → global review → targeted fixes → finish gate).
-  Task prompts are returned as data; your agent just executes them.
+  next task (write a section → blind review panel → targeted fixes → finish
+  gate). Task prompts are returned as data; your agent just executes them.
+- **The review is a blind panel, not self-review.** The review phase asks your
+  harness to spawn four independent subagents — methodology, domain, coherence,
+  devil's advocate — each committing `reviews/<seat>.md` without seeing the
+  others (the author's context is exactly what the panel must not inherit). A
+  synthesis step merges them into `global_issues.md` under iron rules: every
+  finding traces to a seat, the synthesizer invents nothing, and
+  devil's-advocate CRITICALs must be visibly fixed or adjudicated. Fixes land in
+  a traceability matrix (`fix_report.md`) that the finish gate digests — no
+  rubber-stamping.
 - **The budget is yours.** There is no cost breaker here by design. Your harness's
   limits — or you — decide when to stop. (`--max-fix-rounds` is not a budget: it is
   an escalation policy — after N fix rounds a still-failing section is escalated to

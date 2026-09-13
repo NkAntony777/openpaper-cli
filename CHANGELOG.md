@@ -2,6 +2,34 @@
 
 All notable changes are documented in this file.
 
+## 2026-09-13 (2) — blind review panel + fix traceability
+
+Borrowed from the academic-paper-reviewer / scientific-brainstorming skill patterns
+and mapped onto the disk-truth architecture.
+
+### Added
+- **Blind review panel** (`engine/harness/review_panel.py`): the review phase now
+  dispatches four fixed seats — methodology, domain, coherence, devil's advocate —
+  as independent subagents of the HOST harness (fresh contexts; the prompt carries
+  the seat cards verbatim, plus a disclosed single-context fallback for harnesses
+  without subagents). Seats commit `reviews/<seat>.md` blind (no peer visibility,
+  read-only on the paper, every finding = severity + location + fix; no generic
+  feedback; no invented citations). Panel progress is disk truth: `workflow next`
+  re-dispatches only missing seats, then issues a synthesis task once all four
+  report.
+- **Synthesis iron rules**: every GI entry cites its source seat(s) (corroboration
+  raises priority); the synthesizer invents nothing and must record rejected
+  findings in `reviews/adjudication.md`; devil's-advocate CRITICAL findings become
+  `[da-critical]` issues that must be fixed or explicitly adjudicated — silent
+  bypass forbidden. Provenance honesty: role separation is a perspective device,
+  not a claim of independent error processes.
+- **Fix traceability matrix**: fix tasks must maintain `fix_report.md`
+  (`| GI-N | FIXED/NOT FIXED/ADJUDICATED | section | evidence |`); the finish gate
+  result now carries a fix_report digest (verdict counts) — rubber-stamp detection.
+
+### Verification
+- `pytest tests -q` → 596 passed (+14 new panel/traceability tests), all offline.
+
 ## 2026-09-13 — OpenPaper CLI 2.1.0 (repo fork)
 
 Forked from [OpenPaper](https://github.com/NkAntony777/openpaper) as the CLI-native
